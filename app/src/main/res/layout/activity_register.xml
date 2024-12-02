@@ -49,12 +49,15 @@
 
     <Button
         android:id="@+id/registerBtn"
-        android:layout_marginTop="20dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_button"
         android:backgroundTint="@color/air_blue"
         android:text="Register"
-        android:textSize="18sp"
-        android:textColor="@color/black" />
+        android:paddingHorizontal="20dp"
+        android:elevation="5dp"
+        android:textColor="@color/black"
+        android:textSize="18sp" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,13 +13,12 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.authapp.utility.FirebaseHelper;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
 
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
     private TextView emailTextView;
     private Button signOutBtn;
     private Intent intent;
@@ -34,27 +34,29 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
-
         emailTextView = findViewById(R.id.emailTextView);
         signOutBtn = findViewById(R.id.signOutBtn);
 
-        if (currentUser != null) {
-            emailTextView.setText(currentUser.getEmail());
-            Log.d("MainActivity", "onCreate: " + currentUser.getUid());
+        checkCurrentUser();
+
+        //sign out
+        signOutBtn.setOnClickListener(v -> {
+            FirebaseHelper.signOutUser();
+            Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show();
+            intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        });
+    }
+
+    private void checkCurrentUser(){
+        if (FirebaseHelper.getCurrentUser() != null) {
+            emailTextView.setText(FirebaseHelper.getCurrentUser().getEmail());
+            Log.d("MainActivity", "onCreate: " + FirebaseHelper.getCurrentUser().getUid());
         } else {
             intent = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(intent);
             finish();
         }
-
-        //sign out
-        signOutBtn.setOnClickListener(v -> {
-            mAuth.signOut();
-            intent = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(intent);
-            finish();
-        });
     }
 }

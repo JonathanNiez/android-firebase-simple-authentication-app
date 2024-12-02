@@ -12,11 +12,15 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.authapp.utility.FirebaseHelper;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Objects;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private FirebaseAuth mAuth;
     private EditText emailEditText, passwordEditText, confirmPassEditText;
     private Button registerBtn;
 
@@ -30,8 +34,6 @@ public class RegisterActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
-        mAuth = FirebaseAuth.getInstance();
 
         emailEditText = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
@@ -49,20 +51,39 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(this, "Password did not match", Toast.LENGTH_SHORT).show();
             } else if (passwordStr.length() < 6) {
                 Toast.makeText(this, "Password at least 6 characters", Toast.LENGTH_SHORT).show();
-
             } else {
-                mAuth.createUserWithEmailAndPassword(emailStr, passwordStr)
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
-                                startActivity(intent);
-                                finish();
-                            } else {
-                                Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                registerUser(emailStr, passwordStr);
             }
         });
+    }
+
+    private void registerUser(String emailStr, String passwordStr) {
+        FirebaseHelper.getAuth().createUserWithEmailAndPassword(emailStr, passwordStr)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+
+                        HashMap<String, Object> user = new HashMap<>();
+                        user.put("email", emailStr);
+                        user.put("userID", task.getResult().getUser().getUid());
+//                        user.put("userID", FirebaseHelper.getCurrentUser().getUid());
+
+                        FirebaseHelper.getFireStoreInstance()
+                                .collection("users")
+                                .document(task.getResult().getUser().getUid())
+                                .set(user)
+                                .addOnCompleteListener(task1 -> {
+                                    if (task1.isSuccessful()){
+                                        Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
+                                        Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                                        startActivity(intent);
+                                        finish();
+                                    }else {
+                                        Toast.makeText(this, "Registration failed: " + task1.getException(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    } else {
+                        Toast.makeText(this, "Registration failed: " + task.getException(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }
