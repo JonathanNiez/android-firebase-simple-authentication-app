@@ -2,8 +2,10 @@ package com.example.authapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -23,6 +25,8 @@ public class RegisterActivity extends AppCompatActivity {
 
     private EditText emailEditText, passwordEditText, confirmPassEditText;
     private Button registerBtn;
+    private ProgressBar progressBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +43,9 @@ public class RegisterActivity extends AppCompatActivity {
         passwordEditText = findViewById(R.id.passwordEditText);
         confirmPassEditText = findViewById(R.id.confirmPassEditText);
         registerBtn = findViewById(R.id.registerBtn);
+        progressBar = findViewById(R.id.progressBar);
+
+        progressBar.setVisibility(View.GONE);
 
         registerBtn.setOnClickListener(v -> {
             String emailStr = emailEditText.getText().toString().trim();
@@ -51,13 +58,14 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(this, "Password did not match", Toast.LENGTH_SHORT).show();
             } else if (passwordStr.length() < 6) {
                 Toast.makeText(this, "Password at least 6 characters", Toast.LENGTH_SHORT).show();
-            } else {
-                registerUser(emailStr, passwordStr);
-            }
+            } else registerUser(emailStr, passwordStr);
+
         });
     }
 
     private void registerUser(String emailStr, String passwordStr) {
+        progressBar.setVisibility(View.VISIBLE);
+        registerBtn.setVisibility(View.GONE);
         FirebaseHelper.getAuth().createUserWithEmailAndPassword(emailStr, passwordStr)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -72,18 +80,22 @@ public class RegisterActivity extends AppCompatActivity {
                                 .document(task.getResult().getUser().getUid())
                                 .set(user)
                                 .addOnCompleteListener(task1 -> {
-                                    if (task1.isSuccessful()){
+                                    if (task1.isSuccessful()) {
                                         Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
                                         Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                                         startActivity(intent);
                                         finish();
-                                    }else {
+                                    } else {
                                         Toast.makeText(this, "Registration failed: " + task1.getException(), Toast.LENGTH_SHORT).show();
                                     }
+                                    progressBar.setVisibility(View.GONE);
+                                    registerBtn.setVisibility(View.VISIBLE);
                                 });
                     } else {
                         Toast.makeText(this, "Registration failed: " + task.getException(), Toast.LENGTH_SHORT).show();
                     }
+                    progressBar.setVisibility(View.GONE);
+                    registerBtn.setVisibility(View.VISIBLE);
                 });
     }
 }

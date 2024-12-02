@@ -3,8 +3,10 @@ package com.example.authapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -25,6 +27,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private Button loginBtn, nextBtn;
     private EditText emailEditText, passwordEditText;
+    private ProgressBar progressBar;
     private Intent intent;
 
     @Override
@@ -42,6 +45,9 @@ public class LoginActivity extends AppCompatActivity {
         emailEditText = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
         nextBtn = findViewById(R.id.nextBtn);
+        progressBar = findViewById(R.id.progressBar);
+
+        progressBar.setVisibility(View.GONE);
 
         nextBtn.setOnClickListener(v -> {
             intent = new Intent(LoginActivity.this, RegisterActivity.class);
@@ -54,19 +60,25 @@ public class LoginActivity extends AppCompatActivity {
             String passwordStr = passwordEditText.getText().toString();
             if (emailStr.isEmpty() || passwordStr.isEmpty()) {
                 Toast.makeText(this, "Fields must not be empty", Toast.LENGTH_SHORT).show();
-            } else {
-                FirebaseHelper.getAuth().signInWithEmailAndPassword(emailStr, passwordStr)
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                Log.d("LoginActivity", "Login Success");
-                                intent = new Intent(LoginActivity.this, MainActivity.class);
-                                startActivity(intent);
-                                finish();
-                            } else {
-                                Log.e("LoginActivity", "Failed to login: " + task.getException());
-                            }
-                        });
-            }
+            } else loginUser(emailStr, passwordStr);
         });
+    }
+
+    private void loginUser(String emailStr, String passwordStr) {
+        progressBar.setVisibility(View.VISIBLE);
+        loginBtn.setVisibility(View.GONE);
+        FirebaseHelper.getAuth().signInWithEmailAndPassword(emailStr, passwordStr)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("LoginActivity", "Login Success");
+                        intent = new Intent(LoginActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Log.e("LoginActivity", "Failed to login: " + task.getException());
+                    }
+                    progressBar.setVisibility(View.GONE);
+                    loginBtn.setVisibility(View.VISIBLE);
+                });
     }
 }
